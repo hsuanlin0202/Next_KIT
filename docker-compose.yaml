@@ -1,0 +1,20 @@
+# reference url: https://docs.docker.com/compose/compose-file/
+version: "3.8"
+services:
+  gosmart:
+    image: node:14.16.0-alpine3.13
+    container_name: gosmart
+    hostname: 'gosmart'
+    command: ["tail", "-f", "/dev/null"]
+    # command: ["/usr/local/bin/yarn", "start"]
+    environment: 
+      NODE_ENV: production
+    volumes: 
+      - .:/app/
+    ports: 
+      - "3000:3000"
+    networks:
+      - gosmart
+
+networks:
+  gosmart:

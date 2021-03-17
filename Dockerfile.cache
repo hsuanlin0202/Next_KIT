@@ -1,0 +1,11 @@
+FROM node:14.16.0-alpine3.13
+
+RUN apk add --no-cache libc6-compat
+
+WORKDIR /app
+
+COPY package.json yarn.lock ./
+
+RUN yarn upgrade
+
+RUN yarn install

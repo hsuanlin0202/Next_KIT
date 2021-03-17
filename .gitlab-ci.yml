@@ -1,0 +1,52 @@
+variables:
+  RUN_TASK_CMD: "bash -x ./builds/run-tasks.sh"
+  PROJECT_NAME: "fe_gosmart_${CI_JOB_ID}"
+  CI_MODE: "true"
+
+stages:
+  - push_image
+  - deploy
+
+push_image:latest:
+  image: gitlab.car-plus.cool:5000/share/util/docker
+  stage: push_image
+  script:
+    - docker login -u ${CI_REGISTRY_USER} -p ${CI_JOB_TOKEN} ${CI_REGISTRY}
+    - docker build -f Dockerfile --no-cache . -t ${CI_REGISTRY_IMAGE}:latest
+    - docker push ${CI_REGISTRY_IMAGE}:latest
+  only:
+    - develop
+
+push_image:cache:
+  image: gitlab.car-plus.cool:5000/share/util/docker
+  stage: push_image
+  script:
+    - docker login -u ${CI_REGISTRY_USER} -p ${CI_JOB_TOKEN} ${CI_REGISTRY}
+    - docker build -f Dockerfile.cache --no-cache . -t ${CI_REGISTRY_IMAGE}/cache:latest
+    - docker push ${CI_REGISTRY_IMAGE}/cache:latest
+  when: manual
+  only:
+    - develop
+
+push_image:release:
+  image: gitlab.car-plus.cool:5000/share/util/docker
+  stage: push_image
+  script:
+    - docker login -u ${CI_REGISTRY_USER} -p ${CI_JOB_TOKEN} ${CI_REGISTRY}
+    - docker build -f Dockerfile --no-cache . -t ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}
+    - docker push ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}
+  only:
+    - tags
+    
+
+deploy:int:
+  image: gitlab.car-plus.cool:5000/deployer/ansible-docker/2.7.8.0:latest
+  stage: deploy
+  variables:
+    DEPLOYER_PROJECT_NAME: deployer/${CI_PROJECT_NAME}
+    DEPLOYER_PROJECT_BRANCHE: feature
+    STAGE: int
+  only:
+    - develop
+  script:
+    - sh -x /bin/update.sh
